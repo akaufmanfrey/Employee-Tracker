@@ -5,8 +5,6 @@ CREATE DATABASE business_db;
 \c business_db;
 
 -- Create a department table
-DROP TABLE IF EXISTS department;
-DROP TABLE IF EXISTS role;
 
 CREATE TABLE department (
     id SERIAL PRIMARY KEY,
