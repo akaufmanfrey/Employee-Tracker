@@ -1,0 +1,25 @@
+{
+  "name": "employee-tracker",
+  "version": "1.0.0",
+  "description": "a command line tool for managing an sql database of employees",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "Employee-Tracker.git"
+  },
+  "keywords": [
+    "Node",
+    "Inquirer",
+    "Postgres",
+    "SQL"
+  ],
+  "author": "Adam Kaufman-Frey",
+  "license": "MIT",
+  "dependencies": {
+    "inquirer": "^8.2.4",
+    "pg": "^8.12.0"
+  }
+}
