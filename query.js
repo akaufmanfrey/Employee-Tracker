@@ -16,6 +16,17 @@ class Query{
             console.table(rows);
           });
     }
+    addDepartment(pool, dep) {
+        pool.query(`INSERT INTO department(name) VALUES ('${dep}')`, (err, res) => err? console.log(err) : console.log('Department added'));
+    }
+    addRole(pool, title, salary, dep) {
+        pool.query(`INSERT INTO role (title, salary, department) VALUES ('${title}', ${salary}, ${dep})`, 
+            (err, res) => err? console.log(err) : console.log('Role added'));
+    }
+    addEmployee(pool, fname, lname, role_id, manager_id) {
+        pool.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ('${fname}', '${lname}', ${role_id}, ${manager_id})`, 
+            (err, res) => err? console.log(err) : console.log('employee added'));
+    }
 
 }
 

@@ -17,27 +17,110 @@ const pool = new Pool(
 )
 
 pool.connect();
+async function init() {
+  await inquirer.prompt([
+    {
+      type: 'list',
+      message: 'What would you like to do?',
+      name: 'option',
+      choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Quit']
+  
+    }
+  ])
+  .then(async (response) => {
+    const query = new Query();
+    if (response.option === 'View all roles') {
+      query.viewRole(pool);
+    } else if (response.option === 'View all departments') {
+      query.viewDepartment(pool);
+    } else if (response.option === 'View all employees') {
+      query.viewEmployee(pool);
+    } else if (response.option === 'Add a department') {
+      await inquirer.prompt([
+        {
+          type: 'input',
+          message: 'Please enter the name of the new department',
+          name: 'dep'
+        }
+      ]).then((response) => {
+          query.addDepartment(pool, response.dep);
+      })
+    } else if (response.option === 'Add a role') {
+        const resArray = await selectArray('name', 'department');
+        await inquirer.prompt([
+          {
+            type: 'input',
+            message: 'Please enter the name of the new role',
+            name: 'title'
+          },
+          {
+            type: 'input',
+            message: 'Please enter the salary',
+            name: 'salary'
+          },
+          {
+            type: 'list',
+            message: 'Which department does this role belong to?',
+            name: 'dep',
+            choices: resArray
+          }
+        ]).then(async (response) => {
+          console.log(response.dep);
+            const depId = await pool.query(`SELECT id FROM department WHERE name = '${response.dep}'`)
+            console.log(depId.rows[0]);
+            query.addRole(pool, response.title, response.salary, depId.rows[0].id);
+        })
+    } else if (response.option === 'Quit') {
+      process.exit(1);
+    } else if (response.option === 'Add an employee') {
+      const roleArray = await selectArray('title', 'role');
+      const managerArray = await selectManager();
+        await inquirer.prompt([
+          {
+            type: 'input',
+            message: 'Please enter the first name of the employee',
+            name: 'fname'
+          },
+          {
+            type: 'input',
+            message: 'Please enter the last name of the employee',
+            name: 'lname'
+          },
+          {
+            type: 'list',
+            message: 'What is the role of this employee?',
+            name: 'role',
+            choices: roleArray
+          },
+          {
+            type: 'list',
+            message: 'Who is the manager of this employee?',
+            name: 'manager',
+            choices: managerArray
+          }
+        ]).then(async (response) => {
+          console.log(response.dep);
+            const roleId = await pool.query(`SELECT id FROM role WHERE title = '${response.role}'`)
+            const managerId = await pool.query(`SELECT id FROM employee WHERE first_name || ' ' || last_name = '${response.manager}'`)
+            console.log(managerId.rows[0]);
+            query.addEmployee(pool, response.fname, response.lname, roleId.rows[0].id, managerId.rows[0].id);
+        })
+    }
+    init();
+  })
+}
+async function selectArray(column, table) {
+  const res = await pool.query(`SELECT ${column} FROM ${table}`);
+  return res.rows.map(a => a.title)
+}
 
-inquirer.prompt([
-  {
-    type: 'list',
-    message: 'What would you like to do?',
-    name: 'option',
-    choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role']
+async function selectManager() {
+  const res = await pool.query(`SELECT first_name || ' ' || last_name AS manager FROM employee`)
+  console.log(res);
+  return res.rows.map(a => a.manager)
+}
+init();
 
-  }
-])
-.then((response) => {
-  const query = new Query();
-  if (response.option === 'View all roles') {
-    query.viewRole(pool);
-  } else if (response.option === 'View all departments') {
-    query.viewDepartment(pool);
-  } else if (response.option === 'View all employees') {
-    query.viewEmployee(pool);
-  }
-
-})
 
 // Query database
 
