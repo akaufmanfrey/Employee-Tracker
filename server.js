@@ -6,9 +6,8 @@ const Query = require('./query');
 // Connect to database
 const pool = new Pool(
   {
-    // TODO: Enter PostgreSQL username
+    //postgres credentials
     user: 'postgres',
-    // TODO: Enter PostgreSQL password
     password: 'rootroot',
     host: 'localhost',
     database: 'business_db'
@@ -17,7 +16,9 @@ const pool = new Pool(
 )
 
 pool.connect();
+// function to handle user interaction, async so that it waits for user responses before coninuing to execute
 async function init() {
+  // initial prompt which waits for a user to choose an option
   await inquirer.prompt([
     {
       type: 'list',
@@ -29,6 +30,7 @@ async function init() {
   ])
   .then(async (response) => {
     const query = new Query();
+    // check the response to determine which code to execute
     if (response.option === 'View all roles') {
       query.viewRole(pool);
     } else if (response.option === 'View all departments') {
@@ -36,6 +38,7 @@ async function init() {
     } else if (response.option === 'View all employees') {
       query.viewEmployee(pool);
     } else if (response.option === 'Add a department') {
+      
       await inquirer.prompt([
         {
           type: 'input',
@@ -99,14 +102,34 @@ async function init() {
             choices: managerArray
           }
         ]).then(async (response) => {
-          console.log(response.dep);
             const roleId = await pool.query(`SELECT id FROM role WHERE title = '${response.role}'`)
             const managerId = await pool.query(`SELECT id FROM employee WHERE first_name || ' ' || last_name = '${response.manager}'`)
-            console.log(managerId.rows[0]);
             query.addEmployee(pool, response.fname, response.lname, roleId.rows[0].id, managerId.rows[0].id);
         })
+    } else {
+      const roleArray = await selectArray('title', 'role');
+      const employeeArray = await selectManager();
+        await inquirer.prompt([
+          {
+            type: 'list',
+            message: 'Who is the employee to update?',
+            name: 'employee',
+            choices: employeeArray
+          },
+          {
+            type: 'list',
+            message: 'What is the new role of this employee?',
+            name: 'role',
+            choices: roleArray
+          },
+        ]).then((response) => {
+          pool.query(`SELECT id FROM role WHERE title = '${response.role}'`, async (err, res) => {
+            console.log(res.rows);
+            await pool.query(`UPDATE employee SET role_id = ${res.rows[0].id} WHERE first_name || ' ' || last_name = '${response.employee}'`)
+          })
+        })
     }
-    init();
+    setTimeout(init, 1000);
   })
 }
 async function selectArray(column, table) {
@@ -116,12 +139,8 @@ async function selectArray(column, table) {
 
 async function selectManager() {
   const res = await pool.query(`SELECT first_name || ' ' || last_name AS manager FROM employee`)
-  console.log(res);
   return res.rows.map(a => a.manager)
 }
 init();
-
-
-// Query database
 
 
