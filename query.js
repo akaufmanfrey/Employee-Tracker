@@ -1,4 +1,5 @@
 class Query{
+    // a query class with methods for the main types of queries
     viewDepartment(pool) {
         pool.query(`SELECT * FROM department`, function (err, {rows}) {
             console.table(rows);
@@ -10,6 +11,7 @@ class Query{
           });
     }
     viewEmployee(pool) {
+        // grabs the managers names from a self join with the employee table, grabs job title, and salary from role table, grabs department from a join with department table
         pool.query(`SELECT t1.id, t1.first_name, t1.last_name, role.title, department.name, role.salary, t2.first_name || ' ' || t2.last_name AS Manager 
             FROM employee t1 LEFT JOIN employee t2 ON t1.manager_id = t2.id JOIN role ON t1.role_id = role.id 
             JOIN department ON role.department = department.id`, function (err, {rows}) {
